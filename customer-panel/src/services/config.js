@@ -1,5 +1,5 @@
 export const config = {
-  serverBaseUrl: "http://3.109.184.36:6001",
+  serverBaseUrl: "/.netlify/functions/api",
   // serverBaseUrlUser: "http://localhost:4000",
   // serverBaseUrlCatalog: "http://localhost:4001",
   // serverBaseUrlOrder: "http://localhost:4003",

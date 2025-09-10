@@ -3,6 +3,19 @@ const fetch = (...args) => import("node-fetch").then((m) => m.default(...args));
 
 exports.handler = async (event) => {
   try {
+    // Handle CORS preflight requests
+    if (event.httpMethod === "OPTIONS") {
+      return {
+        statusCode: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        body: ""
+      };
+    }
+
     // Base backend URL from env (set in Netlify UI). Default to your EC2 for local testing.
     const BACKEND_BASE = process.env.BACKEND_BASE || "http://3.109.184.36:6001";
 
@@ -41,7 +54,11 @@ exports.handler = async (event) => {
     });
 
     const respText = await resp.text();
-    const respHeaders = {};
+    const respHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS"
+    };
     // Forward content-type if present
     if (resp.headers.get("content-type"))
       respHeaders["Content-Type"] = resp.headers.get("content-type");
