@@ -1,0 +1,23 @@
+[build]
+  # Directory to change to before starting a build
+  base = "admin-panel"
+  
+  # Directory (relative to root of your repo) that contains the deploy-ready HTML files and assets
+  publish = "dist"
+  
+  # Directory with the serverless Lambda functions
+  functions = "functions"
+  
+  # Default build command
+  command = "yarn build"
+
+# Environment variables (you can also set these in Netlify dashboard)
+[build.environment]
+  VITE_SERVER_BASE_URL = "/.netlify/functions/api"
+
+
+# Redirect rules for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

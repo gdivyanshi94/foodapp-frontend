@@ -16,6 +16,7 @@ export async function login(email, password) {
     return response.data;
   } catch (ex) {
     console.log(`exception: `, ex);
+    throw ex;
   }
 }
 
@@ -38,6 +39,7 @@ export async function getAllUsers() {
     return response.data;
   } catch (ex) {
     console.log(`exception: `, ex);
+    throw ex;
   }
 }
 
@@ -60,6 +62,7 @@ export async function toggleUserStatus(userId, status) {
     return response.data;
   } catch (ex) {
     console.log(`exception: `, ex);
+    throw ex;
   }
 }
 
@@ -85,6 +88,7 @@ export async function updateProfile(firstName, lastName) {
     return response.data;
   } catch (ex) {
     console.log(`exception: `, ex);
+    throw ex;
   }
 }
 
@@ -107,6 +111,7 @@ export async function getProfile() {
     return response.data;
   } catch (ex) {
     console.log(`exception: `, ex);
+    throw ex;
   }
 }
 
@@ -125,5 +130,6 @@ export async function registerUser(firstName, lastName, email, password) {
     return response.data;
   } catch (ex) {
     console.log(`exception: `, ex);
+    throw ex;
   }
 }
