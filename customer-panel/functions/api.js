@@ -1,7 +1,7 @@
 // api.js - Netlify function proxy (place exactly where netlify.toml points)
 const fetch = (...args) => import("node-fetch").then((m) => m.default(...args));
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   try {
     // Handle CORS preflight requests
     if (event.httpMethod === "OPTIONS") {
