@@ -1,55 +1,61 @@
-const axios = require('axios');
+// api.js - Netlify function proxy (place exactly where netlify.toml points)
+const fetch = (...args) => import("node-fetch").then((m) => m.default(...args));
 
-exports.handler = async (event, context) => {
-  const { httpMethod, path, headers, body } = event;
-  
-  // Extract the API path (remove /.netlify/functions/api from the beginning)
-  const apiPath = path.replace('/.netlify/functions/api', '');
-  
-  // Your backend API base URL
-  const backendUrl = 'http://3.109.184.36:6001';
-  
+exports.handler = async (event) => {
   try {
-    // Prepare headers for backend request
-    const backendHeaders = {
-      'Content-Type': 'application/json',
-    };
-    
-    // Forward authorization header if present
-    if (headers.authorization) {
-      backendHeaders.authorization = headers.authorization;
-    }
-    
-    // Make request to backend using axios
-    const response = await axios({
-      method: httpMethod.toLowerCase(),
-      url: `${backendUrl}${apiPath}`,
-      headers: backendHeaders,
-      data: httpMethod !== 'GET' && httpMethod !== 'HEAD' ? JSON.parse(body || '{}') : undefined,
+    // Base backend URL from env (set in Netlify UI). Default to your EC2 for local testing.
+    const BACKEND_BASE = process.env.BACKEND_BASE || "http://3.109.184.36:6001";
+
+    // Netlify provides rawPath/rawQueryString on newer runtimes. Fallback to path/query.
+    const rawPath = event.rawPath ?? event.path ?? "";
+    const rawQuery =
+      event.rawQueryString ??
+      (event.queryStringParameters
+        ? new URLSearchParams(event.queryStringParameters).toString()
+        : "");
+
+    const prefix = "/.netlify/functions/api";
+    // Compute path to forward: remove prefix if present
+    const forwardPath = rawPath.startsWith(prefix)
+      ? rawPath.slice(prefix.length)
+      : rawPath;
+    const query = rawQuery ? `?${rawQuery}` : "";
+    const url = `${BACKEND_BASE}${forwardPath}${query}`;
+
+    // Optional debug log (Netlify function logs) — comment out in prod
+    console.log("Proxying to URL:", url, "Method:", event.httpMethod);
+
+    // Prepare headers: copy incoming but remove host to avoid backend rejecting it
+    const headers = Object.assign({}, event.headers);
+    delete headers.host;
+
+    // If content-type indicates JSON and body is a string, forward body directly
+    const body = event.isBase64Encoded
+      ? Buffer.from(event.body, "base64")
+      : event.body;
+
+    const resp = await fetch(url, {
+      method: event.httpMethod,
+      headers,
+      body: ["GET", "HEAD"].includes(event.httpMethod) ? undefined : body,
     });
-    
+
+    const respText = await resp.text();
+    const respHeaders = {};
+    // Forward content-type if present
+    if (resp.headers.get("content-type"))
+      respHeaders["Content-Type"] = resp.headers.get("content-type");
+
     return {
-      statusCode: response.status,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(response.data),
+      statusCode: resp.status,
+      headers: respHeaders,
+      body: respText,
     };
-  } catch (error) {
+  } catch (err) {
+    console.error("Proxy error:", err);
     return {
-      statusCode: error.response?.status || 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        error: 'API Error', 
-        message: error.message,
-        data: error.response?.data 
-      }),
+      statusCode: 502,
+      body: "Proxy error: " + err.message,
     };
   }
 };
