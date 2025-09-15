@@ -53,7 +53,6 @@ export const handler = async (event) => {
       body: ["GET", "HEAD"].includes(event.httpMethod) ? undefined : body,
     });
 
-    const respText = await resp.text();
     const respHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -63,11 +62,25 @@ export const handler = async (event) => {
     if (resp.headers.get("content-type"))
       respHeaders["Content-Type"] = resp.headers.get("content-type");
 
-    return {
-      statusCode: resp.status,
-      headers: respHeaders,
-      body: respText,
-    };
+    // Handle binary data (images) vs text data
+    const contentType = resp.headers.get("content-type") || "";
+    if (contentType.startsWith("image/")) {
+      const respBuffer = await resp.arrayBuffer();
+      const respBase64 = Buffer.from(respBuffer).toString("base64");
+      return {
+        statusCode: resp.status,
+        headers: respHeaders,
+        body: respBase64,
+        isBase64Encoded: true,
+      };
+    } else {
+      const respText = await resp.text();
+      return {
+        statusCode: resp.status,
+        headers: respHeaders,
+        body: respText,
+      };
+    }
   } catch (err) {
     console.error("Proxy error:", err);
     return {
