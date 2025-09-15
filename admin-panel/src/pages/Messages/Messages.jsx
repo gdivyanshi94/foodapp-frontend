@@ -1,17 +1,71 @@
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
+// import { io } from 'socket.io-client' // Uncomment for Socket.IO
 import './Messages.css'
 import { config } from '../../services/config'
 import axios from 'axios'
 
-// For consistent experience, use HTTP polling for admin panel too
+// SOCKET.IO APPROACH (Commented out - can work with admin panel since it's HTTP)
+/*
+const socket = io('http://3.109.184.36:6001', {
+  path: '/socket.io',
+  transports: ['polling', 'websocket'],
+  autoConnect: true,
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 5,
+  timeout: 20000,
+})
+*/
+
+// REST API APPROACH (Current implementation)
 let messagePollingInterval = null
 
 function Messages() {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
 
-  // Fetch messages from server
+  /* SOCKET.IO APPROACH (Commented out - uncomment when ready)
+  useEffect(() => {
+    // Connection event listeners
+    socket.on('connect', () => {
+      console.log('Admin panel connected to Socket.IO server')
+    })
+
+    socket.on('connect_error', (error) => {
+      console.error('Admin panel connection error:', error)
+    })
+
+    socket.on('disconnect', (reason) => {
+      console.log('Admin panel disconnected:', reason)
+    })
+
+    // Listen for new messages
+    socket.on('message', (data) => {
+      console.log('New message received:', data)
+      setMessages(prevMessages => [...prevMessages, data])
+    })
+
+    // Listen for initial messages
+    socket.on('initialMessages', (data) => {
+      console.log('Initial messages received:', data)
+      if (Array.isArray(data)) {
+        setMessages(data)
+      }
+    })
+
+    // Cleanup
+    return () => {
+      socket.off('connect')
+      socket.off('connect_error')
+      socket.off('disconnect')
+      socket.off('message')
+      socket.off('initialMessages')
+    }
+  }, [])
+  */
+
+  // REST API APPROACH (Current implementation)
   const fetchMessages = async () => {
     try {
       const response = await axios.get(`${config.serverBaseUrl}/chat/messages`)
@@ -38,6 +92,28 @@ function Messages() {
     }
   }, [])
 
+  /* SOCKET.IO SEND MESSAGE (Commented out)
+  const onSendMessage = () => {
+    console.log('Sending message:', message)
+    if (message.length == 0) {
+      toast.error('Message cannot be empty')
+    } else {
+      if (socket.connected) {
+        socket.emit('sendMessage', {
+          sender: sessionStorage.getItem('name') || 'Admin',
+          text: message,
+          timestamp: new Date(),
+        })
+        setMessage('')
+      } else {
+        console.error('Socket is not connected')
+        toast.error('Connection error. Please refresh the page.')
+      }
+    }
+  }
+  */
+
+  // REST API SEND MESSAGE (Current implementation)
   const onSendMessage = async () => {
     console.log('Sending message:', message)
     if (message.length == 0) {
