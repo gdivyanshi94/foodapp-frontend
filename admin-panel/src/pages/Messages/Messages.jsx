@@ -5,7 +5,7 @@ import './Messages.css'
 import { config } from '../../services/config'
 
 // create a socket connection with the server
-const socket = io('http://3.109.184.36:4005')
+const socket = io('http://3.109.184.36:6001/chat')
 
 function Messages() {
   const [message, setMessage] = useState('')
