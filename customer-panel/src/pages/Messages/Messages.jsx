@@ -1,52 +1,67 @@
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import { io } from 'socket.io-client'
 import './Messages.css'
 import { config } from '../../services/config'
+import axios from 'axios'
 
-// create a socket connection with the server (direct connection for WebSocket)
-const socket = io('http://3.109.184.36:6001', {
-  path: '/socket.io',
-})
+// For HTTPS sites, we'll use HTTP polling instead of Socket.IO to avoid mixed content
+let messagePollingInterval = null
 
 function Messages() {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
 
+  // Fetch messages from server
+  const fetchMessages = async () => {
+    try {
+      const response = await axios.get(`${config.serverBaseUrl}/chat/messages`)
+      if (response.data && response.data.status === 'success') {
+        setMessages(response.data.data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error)
+    }
+  }
+
   useEffect(() => {
-    // listen for the 'message' event from the server
-    socket.on('message', (data) => {
-      console.log('New message received:', data)
-      setMessages(prevMessages => [...prevMessages, data])
-    })
+    // Initial fetch
+    fetchMessages()
+    
+    // Poll for new messages every 2 seconds
+    messagePollingInterval = setInterval(fetchMessages, 2000)
 
-    // listen for initial messages from the server
-    socket.on('initialMessages', (data) => {
-      console.log('Initial messages received:', data)
-      setMessages(data)
-    })
-
-    // cleanup function to disconnect the socket when the component unmounts
+    // cleanup function
     return () => {
-      //   socket.off('message')
-      //   socket.off('initialMessages')
-      //   socket.disconnect()
+      if (messagePollingInterval) {
+        clearInterval(messagePollingInterval)
+      }
     }
   }, [])
 
-  const onSendMessage = () => {
+  const onSendMessage = async () => {
     console.log('Sending message:', message)
     if (message.length == 0) {
       toast.error('Message cannot be empty')
     } else {
-      // emit the 'sendMessage' event to the server with the message
-      socket.emit('sendMessage', {
-        sender: sessionStorage.getItem('name'),
-        text: message,
-        timestamp: new Date(),
-      })
-
-      setMessage('') // clear the input field after sending
+      try {
+        const messageData = {
+          sender: sessionStorage.getItem('name'),
+          text: message,
+          timestamp: new Date(),
+        }
+        
+        const response = await axios.post(`${config.serverBaseUrl}/chat/messages`, messageData)
+        
+        if (response.data && response.data.status === 'success') {
+          setMessage('') // clear the input field after sending
+          fetchMessages() // Immediately fetch updated messages
+        } else {
+          toast.error('Failed to send message')
+        }
+      } catch (error) {
+        console.error('Error sending message:', error)
+        toast.error('Failed to send message')
+      }
     }
   }
 

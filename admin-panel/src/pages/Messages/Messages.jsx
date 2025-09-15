@@ -4,9 +4,12 @@ import { io } from 'socket.io-client'
 import './Messages.css'
 import { config } from '../../services/config'
 
-// create a socket connection with the server
+// create a socket connection with the server - polling only
 const socket = io('http://3.109.184.36:6001', {
   path: '/socket.io',
+  transports: ['polling'],
+  forceNew: true,
+  upgrade: false,
 })
 
 function Messages() {
