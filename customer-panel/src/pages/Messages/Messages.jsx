@@ -15,7 +15,7 @@ function Messages() {
     // listen for the 'message' event from the server
     socket.on('message', (data) => {
       console.log('New message received:', data)
-      setMessages([...messages, data])
+      setMessages(prevMessages => [...prevMessages, data])
     })
 
     // listen for initial messages from the server
