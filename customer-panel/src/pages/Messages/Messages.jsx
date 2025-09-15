@@ -4,8 +4,10 @@ import { io } from 'socket.io-client'
 import './Messages.css'
 import { config } from '../../services/config'
 
-// create a socket connection with the server
-const socket = io('http://3.109.184.36:6001/chat')
+// create a socket connection with the server (direct connection for WebSocket)
+const socket = io('http://3.109.184.36:6001', {
+  path: '/socket.io',
+})
 
 function Messages() {
   const [message, setMessage] = useState('')
