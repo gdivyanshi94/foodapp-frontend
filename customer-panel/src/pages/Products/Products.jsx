@@ -34,7 +34,7 @@ function Products() {
 
         <div className='row mt-3'>
           {items.map((item) => {
-            const imageUrl = `${config.serverBaseUrlCatalog}/${item['image']}`
+            const imageUrl = `${config.serverBaseUrl}/${item['image']}`
             return (
               <div className='col-3' key={item['id']}>
                 <div className='card' style={{ position: 'relative' }}>
