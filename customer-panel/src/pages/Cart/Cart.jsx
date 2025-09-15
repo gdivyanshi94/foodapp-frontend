@@ -82,7 +82,7 @@ function Cart() {
         <div className="row">
           <div className="col-9">
             {items.map((item) => {
-              const imageUrl = `${config.serverBaseUrl}/${item["image"]}`;
+              const imageUrl = `${config.serverBaseUrlCatalog}/${item["image"]}`;
 
               return (
                 <div
